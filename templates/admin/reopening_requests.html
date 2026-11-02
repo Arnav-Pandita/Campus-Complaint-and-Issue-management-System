@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Reopening Requests{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>Pending Reopening Requests</h1>
+    <a href="{{ url_for('admin.dashboard') }}">Back to Dashboard</a>
+</div>
+
+
+{% for req in requests_list %}
+    <div class="card">
+        <h2>Complaint #{{ req.complaint.id }}</h2>
+
+        <p><strong>Title:</strong> {{ req.complaint.title }}</p>
+        <p><strong>Student:</strong> {{ req.requester.name }}</p>
+        <p><strong>Category:</strong> {{ req.complaint.category }}</p>
+
+        <p><strong>Original Complaint:</strong></p>
+        <p>{{ req.complaint.description }}</p>
+
+        <p><strong>Reopening Reason:</strong></p>
+        <p>{{ req.reason }}</p>
+
+        <p>
+            <strong>Requested On:</strong>
+           {{ req.created_at.strftime("%d-%m-%Y, %H:%M:%S") }}
+        </p>
+
+        <form method="POST"
+              action="{{ url_for('admin.review_reopening_request', request_id=req.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <label for="review_note_{{ req.id }}">Admin response</label>
+            <textarea id="review_note_{{ req.id }}"
+                      name="review_note"
+                      rows="3"
+                      placeholder="Required when rejecting"></textarea>
+
+            <div class="button-group">
+                <button type="submit" name="action" value="approve">
+                    Approve
+                </button>
+
+                <button type="submit" name="action" value="reject" class="button-danger">
+                    Reject
+                </button>
+            </div>
+        </form>
+    </div>
+{% else %}
+    <div class="card">
+        <p class="muted">No pending reopening requests.</p>
+    </div>
+{% endfor %}
+{% endblock %}

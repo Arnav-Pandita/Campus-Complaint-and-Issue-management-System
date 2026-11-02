@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Complaints{% endblock %}
+
+{% block content %}
+
+<div class="card">
+    <h1>All Complaints</h1>
+
+
+
+    <form method="GET" id="complaint-filters">
+        <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: end;">
+            <div style="flex: 1; min-width: 180px;">
+                <label for="status">Status</label>
+                <select id="status" name="status" onchange="this.form.submit()">
+                    <option value="">All Statuses</option>
+                    <option value="under_review" {% if selected_status == "under_review" %}selected{% endif %}>Under Review</option>
+                    <option value="in_progress" {% if selected_status == "in_progress" %}selected{% endif %}>In Progress</option>
+                    <option value="resolved" {% if selected_status == "resolved" %}selected{% endif %}>Resolved</option>
+                </select>
+            </div>
+
+            <div style="flex: 1; min-width: 180px;">
+                <label for="category">Category</label>
+                <select id="category" name="category" onchange="this.form.submit()">
+                    <option value="">All Categories</option>
+                    {% for cat in [
+                        "Infrastructure", "Electricity", "Water Supply",
+                        "Cleanliness", "Internet", "Academic", "Other"
+                    ] %}
+                        <option value="{{ cat }}" {% if selected_category == cat %}selected{% endif %}>
+                            {{ cat }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <a class="btn" href="{{ url_for('admin.all_complaints') }}">Clear Filters</a>
+        </div>
+    </form>
+</div>
+
+<div class="card">
+    {% if complaints %}
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>Category</th>
+                    <th>Student</th>
+                    <th>Status</th>
+                    <th>Priority</th>
+                    <th>Date</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for complaint in complaints %}
+                    <tr>
+                        <td>{{ complaint.id }}</td>
+                        <td>{{ complaint.title }}</td>
+                        <td>{{ complaint.category }}</td>
+                        <td>{{ complaint.student.name }}</td>
+                        <td>{{ complaint.status }}</td>
+                        <td>{{ complaint.priority or "Not assigned" }}</td>
+                        <td>{{ complaint.created_at.strftime("%d-%m-%Y, %H:%M:%S") }}</td>
+                        <td>
+                            <a class="btn manage-btn" href="{{ url_for(
+                                'admin.complaint_details',
+                                complaint_id=complaint.id
+                            ) }}">Manage</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No complaints found.</p>
+    {% endif %}
+
+    <p style="margin-top: 20px;">
+        <a class="btn" href="{{ url_for('admin.dashboard') }}">Back to Dashboard</a>
+    </p>
+</div>
+
+{% endblock %}

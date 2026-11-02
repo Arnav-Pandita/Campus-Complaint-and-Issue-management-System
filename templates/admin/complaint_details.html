@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Complaint{% endblock %}
+
+{% block content %}
+
+<div class="card">
+    <h1>Manage Complaint</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+    {% endwith %}
+
+    <h2>{{ complaint.title }}</h2>
+
+    <p><strong>Complaint ID:</strong> {{ complaint.id }}</p>
+    <p><strong>Student:</strong> {{ complaint.student.name }}</p>
+    <p><strong>Category:</strong> {{ complaint.category }}</p>
+    <p><strong>Description:</strong></p>
+    <p>{{ complaint.description }}</p>
+
+    <p><strong>Current Status:</strong> {{ complaint.status|replace("_", " ")|capitalize }}</p>
+    <p><strong>Current Priority:</strong> {{ complaint.priority or "Not assigned" }}</p>
+    <p><strong>Priority Reason:</strong> {{ complaint.priority_reason or "Not assigned" }}</p>
+</div>
+
+<div class="card">
+    <h2>Attachments</h2>
+
+    {% if attachments %}
+        {% for attachment in attachments %}
+            <div>
+                <img
+                    src="{{ url_for('complaints.view_attachment', attachment_id=attachment.id) }}"
+                    alt="Complaint attachment"
+                    style="max-width: 100%; width: 300px; border-radius: 8px;"
+                >
+
+                <p>{{ attachment.original_filename }}</p>
+            </div>
+            <hr>
+        {% endfor %}
+    {% else %}
+        <p>No attachments submitted.</p>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h2>Update Complaint</h2>
+
+    <form method="POST"
+          action="{{ url_for('admin.update_complaint', complaint_id=complaint.id) }}">
+
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <label for="priority">Assign Priority</label>
+        {% set selected_priority = request.form.get("priority", complaint.priority or "") %}
+        <select id="priority" name="priority">
+            {% for p in ["low", "medium", "high", "critical"] %}
+                <option value="{{ p }}" {% if selected_priority == p %}selected{% endif %}>
+                    {{ p|capitalize }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <label for="priority_reason">Reason for Priority Assignment</label>
+        <textarea
+            id="priority_reason"
+            name="priority_reason"
+            rows="3"
+            placeholder="Explain why this priority was assigned..."
+        ></textarea>
+
+        <label for="status">Update Status</label>
+        {% set selected_status = request.form.get("status", complaint.status) %}
+        <select id="status" name="status">
+            {% for s in ["under_review", "in_progress", "resolved"] %}
+                <option
+                    value="{{ s }}"
+                    {% if selected_status == s %}selected{% endif %}
+                >
+                    {{ s|replace("_", " ")|capitalize }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <label for="note">Administrative Note / Resolution Details</label>
+        <textarea
+            id="note"
+            name="note"
+            rows="5"
+            placeholder="Enter progress details or resolution information..."
+        ></textarea>
+
+        <button type="submit" style="margin-top: 18px;">Save Changes</button>
+    </form>
+</div>
+
+<div class="card">
+    <h2>Complaint History</h2>
+
+    {% for item in history %}
+        <div>
+            <p><strong>{{ item.action }}</strong></p>
+
+            {% if item.old_status or item.new_status %}
+                <p>
+                    {{ item.old_status or "-" }}
+                    &rarr;
+                    {{ item.new_status or "-" }}
+                </p>
+            {% endif %}
+
+            <p>{{ item.note or "" }}</p>
+            <p><small class="muted">{{ item.created_at.strftime("%d-%m-%Y %H:%M") }}</small></p>
+        </div>
+        <hr>
+    {% else %}
+        <p>No history available.</p>
+    {% endfor %}
+</div>
+
+<p>
+    <a class="btn" href="{{ url_for('admin.all_complaints') }}">
+        Back to All Complaints
+    </a>
+</p>
+
+<script>
+    const prioritySelect = document.getElementById("priority");
+    const priorityReason = document.getElementById("priority_reason");
+    const originalPriority = prioritySelect.value;
+
+    function updatePriorityReasonRequirement() {
+        priorityReason.required = prioritySelect.value !== originalPriority;
+    }
+
+    prioritySelect.addEventListener("change", updatePriorityReasonRequirement);
+    updatePriorityReasonRequirement();
+</script>
+
+{% endblock %}
