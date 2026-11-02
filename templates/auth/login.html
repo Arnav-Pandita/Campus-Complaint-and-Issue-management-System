@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Login | Campus Complaint System{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 460px; margin: 40px auto;">
+    <h1>Welcome Back</h1>
+    <p class="muted">Log in to access the Campus Complaint System.</p>
+
+   {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+    {% endwith %}
+
+    <form method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <label for="email">College Email / ID</label>
+        <input
+            type="text"
+            id="email"
+            name="email"
+            placeholder="Enter your college email or ID"
+            required
+        >
+
+        <label for="password">Password</label>
+        <input
+            type="password"
+            id="password"
+            name="password"
+            placeholder="Enter your password"
+            required
+        >
+
+        <button type="submit" style="width: 100%; margin-top: 20px;">
+            Login
+        </button>
+    </form>
+
+    <hr>
+
+    <p>
+        Don't have a student account?
+        <a href="{{ url_for('auth.register') }}">Register here</a>
+    </p>
+
+    <p>
+        Want to register as an admin?
+        <a href="{{ url_for('auth.admin_register') }}">Admin registration</a>
+    </p>
+</div>
+{% endblock %}
