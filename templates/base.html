@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Campus Complaint System{% endblock %}</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            color: #263238;
+        }
+
+        header {
+            background: #183b56;
+            color: white;
+            padding: 18px 16px;
+             position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-content {
+            width: 100%;
+            margin: 0 ;
+        }
+
+        header h2 {
+            margin: 0;
+            font-size: 21px;
+             color: white;
+        }
+
+        .page-nav {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .page-nav button {
+            padding: 6px 12px;
+            font-size: 14px;
+        }
+
+        .page-nav a {
+            color: white;
+            text-decoration: underline;
+        }
+
+        main {
+            width: min(1100px, 92%);
+            margin: 30px auto;
+        }
+
+        .card {
+            background: white;
+            border: 1px solid #e1e7ed;
+            border-radius: 10px;
+            padding: 22px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(20, 40, 60, 0.05);
+        }
+
+        h1, h2, h3, h4 {
+            color: #183b56;
+        }
+
+        label {
+            display: block;
+            margin: 14px 0 6px;
+            font-weight: 600;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #cbd5df;
+            border-radius: 6px;
+            font: inherit;
+            background: white;
+        }
+
+        textarea {
+            min-height: 110px;
+            resize: vertical;
+        }
+
+        button, .btn {
+            display: inline-block;
+            padding: 10px 16px;
+            border: 0;
+            border-radius: 6px;
+            background: #1769aa;
+            color: white;
+            font: inherit;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        button:hover, .btn:hover {
+            background: #125487;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #e1e7ed;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            background: #eaf1f7;
+            color: #183b56;
+        }
+
+        .alert {
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            border-radius: 6px;
+            background: #eaf4ff;
+            border: 1px solid #b9d8f5;
+        }
+
+        .muted {
+            color: #657786;
+        }
+
+        @media (max-width: 650px) {
+            header {
+                padding: 16px;
+            }
+
+            .header-content,
+            main {
+                width: 94%;
+            }
+
+            main {
+                margin: 20px auto;
+            }
+
+            .card {
+                padding: 16px;
+                overflow-x: auto;
+            }
+
+            table {
+                min-width: 600px;
+            }
+        }
+
+        .remove-image-btn {
+            background: #dc2626;
+            color: white;
+            padding: 7px 12px;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .remove-image-btn:hover {
+            background: #b91c1c;
+        }
+
+        .delete-area {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .delete-note {
+            color: #657786;
+            font-size: 14px;
+        }
+
+        .button-danger {
+            background: #dc2626;
+            color: white;
+        }
+
+        .button-danger:hover {
+            background: #b91c1c;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 2000;
+            background: rgba(15, 23, 42, 0.55);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .confirm-modal {
+            width: min(420px, 100%);
+            background: white;
+            border-radius: 10px;
+            padding: 24px;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.25);
+        }
+
+        .confirm-modal h3 {
+            margin-top: 0;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 22px;
+        }
+
+        .cancel-btn {
+            background: #e5e7eb;
+            color: #263238;
+        }
+
+        .cancel-btn:hover {
+            background: #d1d5db;
+        }
+
+        .alert-success {
+            background: #e8f5e9;
+            border: 1px solid #a5d6a7;
+            color: #1b5e20;
+            padding: 14px 18px;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+
+        .manage-btn {
+            display: inline-block;
+            padding: 10px 18px;
+            font-size: 16px;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .notifications-scroll {
+            max-height: 450px;
+            overflow-y: auto;
+            padding-right: 8px;
+        }
+
+        .notification-time {
+            margin-left: 12px;
+        }
+
+        .dashboard-stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .stat-card {
+            flex: 1;
+            min-width: 180px;
+            margin-bottom: 0;
+            color: inherit;
+            text-decoration: none;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        a.stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+        }
+
+        .stat-card span {
+            color: #52677a;
+            font-size: 14px;
+        }
+
+        /* Student dashboard */
+        .student-dashboard {
+            display: grid;
+            gap: 22px;
+        }
+
+        .dashboard-welcome {
+            animation: dashboard-enter 0.55s ease-out both;
+            padding: 8px 2px 0;
+        }
+
+        .dashboard-eyebrow {
+            margin: 0 0 8px;
+            color: #1769aa;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+        }
+
+        .dashboard-welcome h1 {
+            margin: 0;
+            font-size: clamp(28px, 4vw, 36px);
+        }
+
+        .dashboard-subtitle {
+            margin: 10px 0 0;
+            color: #657786;
+            font-size: 16px;
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 16px;
+            animation: dashboard-enter 0.65s ease-out both;
+            animation-delay: 0.08s;
+        }
+
+        .action-card {
+            display: flex;
+            flex-direction: column;
+            gap: 9px;
+            min-height: 150px;
+            padding: 22px;
+            border: 1px solid #dce5ed;
+            border-radius: 12px;
+            background: white;
+            color: #183b56;
+            text-decoration: none;
+            box-shadow: 0 3px 12px rgba(20, 40, 60, 0.04);
+            transition: transform 0.18s ease, box-shadow 0.18s ease,
+                        border-color 0.18s ease;
+        }
+
+        .action-card:hover {
+            transform: translateY(-3px);
+            border-color: #9fc4e2;
+            box-shadow: 0 8px 22px rgba(20, 40, 60, 0.09);
+        }
+
+        .action-card-primary {
+            border-color: #1769aa;
+            background: #1769aa;
+            color: white;
+        }
+
+        .action-card-primary:hover {
+            border-color: #125487;
+            background: #125487;
+        }
+
+        .action-icon {
+            display: grid;
+            place-items: center;
+            width: 34px;
+            height: 34px;
+            border-radius: 9px;
+            background: #eaf3fb;
+            color: #1769aa;
+            font-size: 22px;
+            font-weight: 600;
+        }
+
+        .action-card-primary .action-icon {
+            background: rgba(255, 255, 255, 0.17);
+            color: white;
+        }
+
+        .action-title {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .action-description {
+            color: #657786;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .action-card-primary .action-description {
+            color: #e6f2fc;
+        }
+
+        .dashboard-section {
+            min-width: 0;
+        }
+
+        .section-heading {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .section-heading h2 {
+            margin: 0;
+            font-size: 21px;
+        }
+
+        .section-heading p {
+            margin: 6px 0 0;
+            font-size: 14px;
+        }
+
+        .notifications-scroll {
+            max-height: 420px;
+            overflow-y: auto;
+            padding-right: 6px;
+        }
+
+        .notification-item {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 18px;
+            padding: 16px 4px;
+            border-bottom: 1px solid #e8edf2;
+        }
+
+        .notification-item:first-child {
+            padding-top: 4px;
+        }
+
+        .notification-item:last-child {
+            border-bottom: 0;
+        }
+
+        .notification-unread {
+            border-left: 3px solid #1769aa;
+            padding-left: 13px;
+        }
+
+        .notification-content {
+            min-width: 0;
+        }
+
+        .notification-content p {
+            margin: 0 0 8px;
+            line-height: 1.5;
+        }
+
+        .notification-content small {
+            font-size: 12px;
+        }
+
+        .notification-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .new-badge {
+            padding: 4px 8px;
+            border-radius: 999px;
+            background: #e8f3ff;
+            color: #1769aa;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .read-label {
+            color: #657786;
+            font-size: 12px;
+        }
+
+        .button-small {
+            padding: 7px 10px;
+            font-size: 12px;
+        }
+
+        .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .complaints-table {
+            min-width: 760px;
+        }
+
+        .complaints-table th,
+        .complaints-table td {
+            padding: 14px 12px;
+        }
+
+        .complaint-title-cell {
+            max-width: 240px;
+            font-weight: 600;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 9px;
+            border-radius: 999px;
+            background: #edf1f5;
+            color: #475569;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .status-submitted {
+            background: #eaf3ff;
+            color: #175a9b;
+        }
+
+        .status-under_review {
+            background: #fff4d6;
+            color: #8a5b00;
+        }
+
+        .status-in_progress {
+            background: #e8f3ff;
+            color: #1769aa;
+        }
+
+        .status-resolved {
+            background: #e6f5eb;
+            color: #207443;
+        }
+
+        .table-link {
+            color: #1769aa;
+            font-weight: 600;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .table-link:hover {
+            text-decoration: underline;
+        }
+
+        .empty-state {
+            color: #657786;
+            padding: 8px 0;
+        }
+
+        .dashboard-footer {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .logout-button {
+            background: #eef2f6;
+            color: #475569;
+        }
+
+        .logout-button:hover {
+            background: #e0e7ef;
+        }
+
+        @keyframes dashboard-enter {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 760px) {
+            .quick-actions {
+                grid-template-columns: 1fr;
+            }
+
+            .action-card {
+                min-height: auto;
+            }
+
+            .notification-item {
+                flex-direction: column;
+            }
+
+            .notification-actions {
+                flex-wrap: wrap;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .dashboard-welcome,
+            .quick-actions {
+                animation: none;
+            }
+
+            .action-card {
+                transition: none;
+            }
+        }
+
+        .vote-button,
+        .vote-count {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 6px 12px;
+            border: 1px solid #d5e1ee;
+            border-radius: 8px;
+            background: #f4f8fc;
+            color: #184b78;
+            font-weight: 600;
+        }
+
+        .vote-button {
+            cursor: pointer;
+        }
+
+        .vote-button:hover,
+        .vote-button-active {
+            background: #e4f0fb;
+            border-color: #8db9df;
+        }
+
+        .vote-icon {
+            font-size: 18px;
+            line-height: 1;
+        }
+
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="header-content">
+            {% if request.endpoint not in ['student.dashboard', 'admin.dashboard', 'superadmin.dashboard'] %}
+                <div class="page-nav">
+                    <button type="button" onclick="history.back()">← Back</button>
+
+                    {% if current_user.is_authenticated %}
+                        {% if current_user.role == 'student' %}
+                            <a href="{{ url_for('student.dashboard') }}">Back to Dashboard</a>
+                        {% elif current_user.role == 'admin' %}
+                            <a href="{{ url_for('admin.dashboard') }}">Back to Dashboard</a>
+                        {% elif current_user.role == 'superadmin' %}
+                            <a href="{{ url_for('superadmin.dashboard') }}">Back to Dashboard</a>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            {% endif %}
+
+            <h2>Campus Complaint &amp; Issue Management System</h2>
+        </div>
+    </header>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>
