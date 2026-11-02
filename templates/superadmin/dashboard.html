@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}Superadmin Dashboard{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>Superadmin Dashboard</h1>
+    <h2>Welcome, {{ current_user.name }}</h2>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <div class="alert">{{ message }}</div>
+        {% endfor %}
+    {% endwith %}
+</div>
+
+<div class="card">
+    <h2>Pending Admin Registrations</h2>
+
+    {% if pending_admins %}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>College ID</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for admin in pending_admins %}
+                        <tr>
+                            <td>{{ admin.name }}</td>
+                            <td>{{ admin.email }}</td>
+                            <td>{{ admin.college_id }}</td>
+                            <td>
+                                <div class="button-group">
+                                    <form method="POST"
+                                          action="{{ url_for('superadmin.approve_admin', user_id=admin.id) }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit">Approve</button>
+                                    </form>
+
+                                    <form method="POST"
+                                          action="{{ url_for('superadmin.reject_admin', user_id=admin.id) }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="button-danger">Reject</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="muted">No pending admin registrations.</p>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h2>Approved Administrators</h2>
+
+    {% if approved_admins %}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>College ID</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for admin in approved_admins %}
+                        <tr>
+                            <td>{{ admin.name }}</td>
+                            <td>{{ admin.email }}</td>
+                            <td>{{ admin.college_id }}</td>
+                            <td>
+                                <form method="POST"
+                                      action="{{ url_for('superadmin.deactivate_admin', user_id=admin.id) }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="button-danger">Deactivate</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="muted">No approved administrators yet.</p>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h2>Deactivated Administrators</h2>
+
+    {% if inactive_admins %}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>College ID</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for admin in inactive_admins %}
+                        <tr>
+                            <td>{{ admin.name }}</td>
+                            <td>{{ admin.email }}</td>
+                            <td>{{ admin.college_id }}</td>
+                            <td>
+                                <form method="POST"
+                                      action="{{ url_for('superadmin.reactivate_admin', user_id=admin.id) }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit">Reactivate</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="muted">No deactivated administrators.</p>
+    {% endif %}
+</div>
+
+<div class="card">
+    <form method="POST" action="{{ url_for('auth.logout') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit">Logout</button>
+    </form>
+</div>
+{% endblock %}
