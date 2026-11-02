@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}Student Dashboard{% endblock %}
+
+{% block content %}
+<div class="student-dashboard">
+
+    <section class="dashboard-welcome">
+        <div>
+            <p class="dashboard-eyebrow">STUDENT PORTAL</p>
+            <h1>Welcome, {{ current_user.name }}!</h1>
+            <p class="dashboard-subtitle">
+                View updates, track your complaints, or report a new issue.
+            </p>
+        </div>
+    </section>
+
+    <section class="quick-actions" aria-label="Quick actions">
+        <a class="action-card" href="{{ url_for('student.public_complaints') }}">
+            <span class="action-icon">🌐</span>
+            <span class="action-title">Public Complaints</span>
+            <span class="action-description">Browse issues shared by students</span>
+        </a>
+
+        <a class="action-card" href="{{ url_for('complaints.track_complaint') }}">
+            <span class="action-icon">⌕</span>
+            <span class="action-title">Track by Access Code</span>
+            <span class="action-description">Check a complaint’s progress</span>
+        </a>
+
+        <a class="action-card action-card-primary"
+           href="{{ url_for('complaints.submit') }}">
+            <span class="action-icon">＋</span>
+            <span class="action-title">Submit New Complaint</span>
+            <span class="action-description">Report an issue on campus</span>
+        </a>
+    </section>
+
+    <section class="dashboard-section card">
+    <div class="section-heading">
+        <div>
+            <h2>Notifications</h2>
+            <p class="muted">Updates about your complaints</p>
+        </div>
+    </div>
+
+    {% if notification_groups %}
+        <div class="notifications-scroll">
+            {% for group in notification_groups.values() %}
+                <div class="notification-group">
+                    <div class="notification-group-heading">
+                        <strong>
+                            {{ group["complaint"].title if group["complaint"] else "Complaint update" }}
+                        </strong>
+
+                        {% if group["unread_count"] > 0 %}
+                            <span class="notification-bell" title="{{ group['unread_count'] }} unread notifications">
+                                🔔 <span class="unread-count">{{ group["unread_count"] }}</span>
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    {% for notification in group["notifications"] %}
+                        <article class="notification-item
+                            {% if not notification.is_read %}notification-unread{% endif %}">
+                            <div class="notification-content">
+                                <p>{{ notification.message }}</p>
+                                <small class="muted">
+                                    {{ notification.created_at.strftime("%d-%m-%Y, %H:%M:%S") }}
+                                </small>
+                            </div>
+
+                            <div class="notification-actions">
+                                {% if not notification.is_read %}
+                                    <span class="new-badge">New</span>
+
+                                    <form method="POST"
+                                          action="{{ url_for('student.mark_notification_read', notification_id=notification.id) }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button class="button-small" type="submit">
+                                            Mark as Read
+                                        </button>
+                                    </form>
+                                {% else %}
+                                    <span class="read-label">Read</span>
+                                {% endif %}
+                            </div>
+                        </article>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="empty-state">You have no notifications yet.</p>
+    {% endif %}
+</section>
+
+    <section class="dashboard-section card">
+        <div class="section-heading">
+            <div>
+                <h2>My Complaints</h2>
+                <p class="muted">Your submitted complaints and their current status</p>
+            </div>
+        </div>
+
+        {% if complaints %}
+            <div class="table-wrapper">
+                <table class="complaints-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Complaint</th>
+                            <th>Category</th>
+                            <th>Status</th>
+                            <th>Priority</th>
+                            <th>Date</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for complaint in complaints %}
+                            <tr>
+                                <td>#{{ complaint.id }}</td>
+                                <td class="complaint-title-cell">{{ complaint.title }}</td>
+                                <td>{{ complaint.category }}</td>
+                                <td>
+                                    <span class="status-badge status-{{ complaint.status|lower }}">
+                                        {{ complaint.status|replace("_", " ")|title }}
+                                    </span>
+                                </td>
+                                <td>{{ (complaint.priority or "Pending review")|replace("_", " ")|title }}</td>
+                                <td>{{ complaint.created_at.strftime("%d-%m-%Y") }}</td>
+                                <td>
+                                    <a class="table-link"
+                                       href="{{ url_for('student.complaint_details',
+                                                        complaint_id=complaint.id) }}">
+                                        View Details
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="empty-state">You haven’t submitted any complaints yet.</p>
+            <a class="btn" href="{{ url_for('complaints.submit') }}">
+                Submit Your First Complaint
+            </a>
+        {% endif %}
+    </section>
+
+    <div class="dashboard-footer">
+        <form method="POST" action="{{ url_for('auth.logout') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="logout-button" type="submit">Log Out</button>
+        </form>
+    </div>
+
+</div>
+{% endblock %}

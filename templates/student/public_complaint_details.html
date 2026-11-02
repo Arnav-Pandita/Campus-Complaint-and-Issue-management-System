@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Complaint Details{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>{{ complaint.title }}</h1>
+
+    <p class="muted">
+        {{ complaint.category }} · Status: {{ complaint.status }}
+    </p>
+
+    <p>{{ complaint.description }}</p>
+
+    <div class="vote-section">
+        <span>{{ vote_count }} upvote{% if vote_count != 1 %}s{% endif %}</span>
+
+        {% if current_user.is_authenticated and current_user.role == "student" %}
+            <form
+                method="POST"
+                action="{{ url_for('complaints.toggle_public_complaint_vote', complaint_id=complaint.id) }}"
+            >
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <button type="submit">
+                    {% if user_voted %}Remove Upvote{% else %}Upvote{% endif %}
+                </button>
+            </form>
+        {% endif %}
+    </div>
+
+    <h2>Attachments</h2>
+
+    {% if attachments %}
+        {% for attachment in attachments %}
+            <div>
+                <a
+                    href="{{ url_for('complaints.view_attachment', attachment_id=attachment.id) }}"
+                    target="_blank"
+                >
+                    {{ attachment.original_filename }}
+                </a>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p class="muted">No public attachments.</p>
+    {% endif %}
+
+    <p>
+        <a href="{{ url_for('complaints.public_complaints') }}">Back to Public Complaints</a>
+    </p>
+</div>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Complaint Submitted{% endblock %}
+
+{% block content %}
+
+<div class="card">
+     
+
+    <h1>Complaint Submitted Successfully!</h1>
+  
+    <p>Your complaint has been submitted and is awaiting review by the administration.</p>
+
+    <h2>Complaint Details</h2>
+    <p><strong>Complaint ID:</strong> {{ complaint.id }}</p>
+    <p><strong>Title:</strong> {{ complaint.title }}</p>
+    <p><strong>Status:</strong> {{ complaint.status }}</p>
+
+    <h2>Your Private Tracking Code</h2>
+    <p><strong>{{ tracking_code }}</strong></p>
+    <p class="muted">
+        Save this code safely. It will be needed for private complaint tracking.
+    </p>
+
+    <a class="btn" href="{{ url_for('auth.login') }}">
+        Go to Login
+    </a>
+</div>
+
+{% endblock %}

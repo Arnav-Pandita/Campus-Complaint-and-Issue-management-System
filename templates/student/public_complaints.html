@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}Public Complaints{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1><span aria-hidden="true">🌐</span> Public Complaints</h1>
+    <p class="muted">Browse complaints shared publicly.</p>
+
+    {% if complaints %}
+        {% for complaint in complaints %}
+            <div class="card">
+                <h2>
+                    <a href="{{ url_for('complaints.public_complaint_details', complaint_id=complaint.id) }}">
+                        {{ complaint.title }}
+                    </a>
+                </h2>
+
+                <p class="muted">
+                    {{ complaint.category }} · Status: {{ complaint.status }}
+                </p>
+
+                <p>{{ complaint.description }}</p>
+
+                {% if current_user.is_authenticated and current_user.role == "student" %}
+                   <form class="vote-form"
+                        method="POST"
+                        action="{{ url_for('complaints.toggle_public_complaint_vote', complaint_id=complaint.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="action"
+                            value="{{ 'remove' if complaint.user_voted else 'upvote' }}">
+
+                        <button type="submit"
+                                class="vote-button {% if complaint.user_voted %}vote-button-active{% endif %}">
+                            <span class="vote-icon" aria-hidden="true">↑</span>
+                            <span class="vote-count">{{ complaint.vote_count }}</span>
+                        </button>
+                    </form>
+                {% else %}
+                    <div class="vote-count">
+                        <span class="vote-icon" aria-hidden="true">↑</span>
+                        <span>{{ complaint.vote_count }}</span>
+                    </div>
+                {% endif %}
+            </div>
+        {% endfor %}
+    {% else %}
+        <p class="muted">No public complaints are available yet.</p>
+    {% endif %}
+</div>
+
+<script>
+    if (window.history.replaceState) {
+        window.history.replaceState(null, "", window.location.href);
+    }
+</script>
+
+<script>
+document.querySelectorAll(".vote-form").forEach(form => {
+    form.addEventListener("submit", async function (event) {
+        event.preventDefault();
+
+        const button = form.querySelector("button");
+        button.disabled = true;
+
+        try {
+            const response = await fetch(form.getAttribute("action"), {
+                method: "POST",
+                body: new FormData(form)
+            });
+
+            if (!response.ok) {
+                throw new Error("HTTP " + response.status);
+            }
+
+            const data = await response.json();
+            form.querySelector(".vote-count").textContent = data.vote_count;
+
+            const actionInput = form.querySelector('input[name="action"]');
+            actionInput.value = data.user_voted ? "remove" : "upvote";
+            button.classList.toggle("vote-button-active", data.user_voted);
+        } catch (error) {
+            console.error("Vote request failed:", error);
+            alert("Vote failed. Check the Flask terminal.");
+        } finally {
+            button.disabled = false;
+        }
+    });
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}Submit Complaint{% endblock %}
+
+{% block content %}
+<div class="card">
+
+
+    <h1>Submit a Complaint</h1>
+
+  
+
+    <p class="muted">
+        Describe the issue clearly. Do not include private information in uploaded images.
+    </p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <div class="alert">{{ message }}</div>
+        {% endfor %}
+    {% endwith %}
+
+    <form method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <label for="title">Complaint Title</label>
+        <input type="text" id="title" name="title" maxlength="200" required>
+
+        <label for="category">Category</label>
+        <select id="category" name="category" required>
+            <option value="">Select a category</option>
+            {% for category in [
+                "Infrastructure", "Electricity", "Water Supply",
+                "Cleanliness", "Internet", "Academic", "Other"
+            ] %}
+                <option value="{{ category }}">{{ category }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="description">Description</label>
+        <textarea id="description" name="description" maxlength="10000" required></textarea>
+
+        <label for="visibility">Complaint Visibility</label>
+        <select id="visibility" name="visibility" required>
+            <option value="public">Public — other students can view it, but your identity is hidden</option>
+            <option value="private">Private — only you and admins can view it</option>
+        </select>
+
+        <label for="images">Attach Images (optional)</label>
+        <input type="file"
+               id="images"
+               name="images"
+               accept=".png,.jpg,.jpeg,.webp"
+               multiple>
+
+        <small class="muted">PNG, JPG, JPEG or WEBP; total size up to 5 MB.</small>
+
+        <div id="selected-images" class="card" hidden>
+            <strong>Selected images</strong>
+            <ul id="image-list"></ul>
+            <p id="image-total" class="muted"></p>
+        </div>
+
+        <p class="muted">
+            Avoid uploading images containing personal details. Uploaded images are not automatically redacted.
+        </p>
+
+        <button type="submit" style="margin-top: 18px;">Submit Complaint</button>
+    </form>
+</div>
+
+{% if similar_complaints %}
+<div class="card">
+    <h2>Similar Public Complaints</h2>
+    <p class="muted">These complaints are in the selected category.</p>
+
+    {% for complaint in similar_complaints %}
+        <div>
+            <h3>{{ complaint.title }}</h3>
+            <p>{{ complaint.description }}</p>
+            <small class="muted">Status: {{ complaint.status }}</small>
+        </div>
+        <hr>
+    {% endfor %}
+</div>
+{% endif %}
+
+<script>
+    const imageInput = document.getElementById("images");
+    const selectedImages = document.getElementById("selected-images");
+    const imageList = document.getElementById("image-list");
+    const imageTotal = document.getElementById("image-total");
+    const maxTotalSize = 5 * 1024 * 1024;
+
+    let selectedFiles = [];
+
+    function renderSelectedImages() {
+        imageList.innerHTML = "";
+
+        let totalSize = 0;
+
+        selectedFiles.forEach((file, index) => {
+            totalSize += file.size;
+
+            const item = document.createElement("li");
+            const name = document.createTextNode(
+                `${file.name} (${(file.size / 1024).toFixed(1)} KB) `
+            );
+
+            const removeButton = document.createElement("button");
+            removeButton.type = "button";
+            removeButton.textContent = "Remove";
+            removeButton.className = "remove-image-btn";
+            removeButton.addEventListener("click", () => {
+                selectedFiles.splice(index, 1);
+                updateInputFiles();
+                renderSelectedImages();
+            });
+
+            item.appendChild(name);
+            item.appendChild(removeButton);
+            imageList.appendChild(item);
+        });
+
+        selectedImages.hidden = selectedFiles.length === 0;
+        imageTotal.textContent =
+            `Total: ${(totalSize / (1024 * 1024)).toFixed(2)} MB`;
+
+        if (totalSize > maxTotalSize) {
+            imageTotal.textContent += " — exceeds the 5 MB limit.";
+            imageTotal.style.color = "red";
+        } else {
+            imageTotal.style.color = "";
+        }
+    }
+
+    function updateInputFiles() {
+        const dataTransfer = new DataTransfer();
+
+        selectedFiles.forEach(file => dataTransfer.items.add(file));
+        imageInput.files = dataTransfer.files;
+    }
+
+    imageInput.addEventListener("change", () => {
+        const newFiles = Array.from(imageInput.files);
+
+        newFiles.forEach(file => {
+            const alreadySelected = selectedFiles.some(
+                existing =>
+                    existing.name === file.name &&
+                    existing.size === file.size &&
+                    existing.lastModified === file.lastModified
+            );
+
+            if (!alreadySelected) {
+                selectedFiles.push(file);
+            }
+        });
+
+        updateInputFiles();
+        renderSelectedImages();
+    });
+</script>
+{% endblock %}

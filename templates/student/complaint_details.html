@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}Complaint Details{% endblock %}
+
+{% block content %}
+<div class="card">
+
+
+    <h1>Complaint Details</h1>
+
+    <h2>{{ complaint.title }}</h2>
+
+    <p><strong>Complaint ID:</strong> {{ complaint.id }}</p>
+    <p><strong>Category:</strong> {{ complaint.category }}</p>
+
+    <p><strong>Description:</strong></p>
+    <p>{{ complaint.description }}</p>
+
+    <p>
+        <strong>Status:</strong>
+        <span class="badge">{{ complaint.status }}</span>
+    </p>
+
+    <p>
+        <strong>Priority:</strong>
+        {{ complaint.priority or "Pending review" }}
+    </p>
+
+    {% if complaint.priority_reason %}
+        <p><strong>Priority Reason:</strong> {{ complaint.priority_reason }}</p>
+    {% endif %}
+
+    <p>
+        <strong>Submitted:</strong>
+        {{ complaint.created_at.strftime("%d-%m-%Y %H:%M") }}
+    </p>
+
+    {% if complaint.resolved_at %}
+        <p>
+            <strong>Resolved:</strong>
+            {{ complaint.resolved_at.strftime("%d-%m-%Y %H:%M") }}
+        </p>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h2>Complaint History</h2>
+
+    {% if history %}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Action</th>
+                        <th>Old Status</th>
+                        <th>New Status</th>
+                        <th>Note</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in history %}
+                        <tr>
+                            <td>{{ item.action }}</td>
+                            <td>{{ item.old_status or "-" }}</td>
+                            <td>{{ item.new_status or "-" }}</td>
+                            <td>{{ item.note or "-" }}</td>
+                            <td>{{ item.created_at.strftime("%d-%m-%Y %H:%M") }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="muted">No history available.</p>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h2>Reopening Request</h2>
+
+    {% if complaint.status == "resolved" %}
+        {% set pending_request = complaint.reopening_requests
+            | selectattr("status", "equalto", "pending")
+            | list
+            | first %}
+
+        {% if pending_request %}
+            <p class="alert">Your reopening request is awaiting admin approval.</p>
+        {% else %}
+            <form method="POST"
+                  action="{{ url_for('student.request_reopening', complaint_id=complaint.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <label for="reason">Reason for reopening</label>
+                <textarea id="reason"
+                          name="reason"
+                          required
+                          rows="4"
+                          placeholder="Explain why this complaint needs to be reopened."></textarea>
+
+                <button type="submit">Request Reopening</button>
+            </form>
+        {% endif %}
+    {% else %}
+        <p>This complaint is currently {{ complaint.status }}.</p>
+    {% endif %}
+
+{% if complaint.status == "submitted" %}
+    <hr>
+
+    <div class="delete-area">
+        <form method="POST"
+              action="{{ url_for('student.delete_complaint', complaint_id=complaint.id) }}"
+              id="deleteComplaintForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <button type="button"
+                    class="button-danger"
+                    onclick="document.getElementById('deleteConfirmModal').style.display='flex'">
+                Delete Complaint
+            </button>
+        </form>
+
+        <span class="delete-note">
+            * You can delete this complaint only before administration processing begins.
+        </span>
+    </div>
+
+    <div id="deleteConfirmModal" class="modal-overlay" style="display:none;">
+        <div class="confirm-modal" role="dialog" aria-modal="true"
+             aria-labelledby="deleteModalTitle">
+            <h3 id="deleteModalTitle">Delete Complaint?</h3>
+            <p>This complaint will be permanently deleted. This action cannot be undone.</p>
+
+            <div class="modal-actions">
+                <button type="button" class="cancel-btn"
+                        onclick="document.getElementById('deleteConfirmModal').style.display='none'">
+                    Cancel
+                </button>
+
+                <button type="button" class="button-danger"
+                        onclick="document.getElementById('deleteComplaintForm').submit()">
+                    Yes, Delete
+                </button>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+</div>
+
+<div class="card">
+    <h2>Previous Reopening Requests</h2>
+
+    {% for req in complaint.reopening_requests|sort(attribute="created_at", reverse=True) %}
+        <div class="card">
+            <p><strong>Reason:</strong> {{ req.reason }}</p>
+            <p><strong>Status:</strong> {{ req.status }}</p>
+
+            {% if req.review_note %}
+                <p><strong>Admin response:</strong> {{ req.review_note }}</p>
+            {% endif %}
+        </div>
+    {% else %}
+        <p class="muted">No reopening requests yet.</p>
+    {% endfor %}
+</div>
+
+<a href="{{ url_for('student.dashboard') }}">Back to Dashboard</a>
+{% endblock %}
